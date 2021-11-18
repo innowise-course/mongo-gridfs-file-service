@@ -1,4 +1,4 @@
-package ru.innowise.danko.mongogridfileservice.entity;
+package ru.innowise.danko.mongogridfileservice.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class FileEntity {
+public class FileDto {
 
     private String name;
 

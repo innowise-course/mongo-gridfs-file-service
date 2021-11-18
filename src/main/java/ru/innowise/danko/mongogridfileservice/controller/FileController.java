@@ -7,7 +7,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import ru.innowise.danko.mongogridfileservice.entity.FileEntity;
+import ru.innowise.danko.mongogridfileservice.dto.FileDto;
 import ru.innowise.danko.mongogridfileservice.service.FileService;
 
 @RestController
@@ -28,7 +28,7 @@ public class FileController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ByteArrayResource> getFile(@PathVariable String id) {
-        FileEntity file = fileService.downloadFile(id);
+        FileDto file = fileService.downloadFile(id);
         return ResponseEntity.ok().contentType(MediaType.parseMediaType(file.getType()))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" +file.getName())
                 .body(new ByteArrayResource(file.getFile()));
