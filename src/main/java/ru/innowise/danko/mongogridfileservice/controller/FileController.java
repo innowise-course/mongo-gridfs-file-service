@@ -21,10 +21,9 @@ public class FileController {
         this.fileService = fileService;
     }
 
-    @PostMapping("/post")
-    public ResponseEntity<?> postFile(@RequestPart("file") MultipartFile file) {
-        fileService.uploadFile(file.getName(), file);
-        return ResponseEntity.ok().body("The file was successfully added ");
+    @PostMapping("/")
+    public ResponseEntity<String> uploadFile(@RequestPart("file") MultipartFile file) {
+        return ResponseEntity.ok().body(fileService.uploadFile(file));
     }
 
     @GetMapping("/{id}")

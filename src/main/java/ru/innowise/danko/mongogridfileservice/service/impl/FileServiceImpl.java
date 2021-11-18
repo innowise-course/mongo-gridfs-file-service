@@ -32,13 +32,12 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public String uploadFile(String name, MultipartFile multipartFile) {
+    public String uploadFile(MultipartFile multipartFile) {
         DBObject metaData = new BasicDBObject();
         metaData.put("type", "file");
-        metaData.put("name", name);
         try {
             ObjectId id = gridFsTemplate.store(multipartFile.getInputStream(),
-                            multipartFile.getName(), multipartFile.getContentType(), metaData);
+                            multipartFile.getOriginalFilename(), multipartFile.getContentType());
             return id.toString();
         } catch (IOException e) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "access error" ,e);
@@ -50,7 +49,7 @@ public class FileServiceImpl implements FileService {
         GridFSFile file = gridFsTemplate.findOne(new Query(Criteria.where("_id").is(id)));
         try {
             FileEntity fileEntity = FileEntity.builder()
-                    .name(file.getMetadata().get("name").toString())
+                    .name(file.getFilename())
                     .type(operations.getResource(file).getContentType())
                     .file(operations.getResource(file).getInputStream().readAllBytes())
                     .build();

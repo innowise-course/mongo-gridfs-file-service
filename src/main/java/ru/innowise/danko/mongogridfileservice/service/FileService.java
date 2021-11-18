@@ -5,7 +5,7 @@ import ru.innowise.danko.mongogridfileservice.entity.FileEntity;
 
 public interface FileService {
 
-    String uploadFile(String name, MultipartFile multipartFile);
+    String uploadFile(MultipartFile multipartFile);
 
     FileEntity downloadFile(String id);
 
