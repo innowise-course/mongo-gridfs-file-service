@@ -9,8 +9,10 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 import ru.innowise.danko.mongogridfileservice.entity.FileEntity;
 import ru.innowise.danko.mongogridfileservice.service.FileService;
 
@@ -19,9 +21,9 @@ import java.io.*;
 @Service
 public class FileServiceImpl implements FileService {
 
-    public final GridFsTemplate gridFsTemplate;
+    public GridFsTemplate gridFsTemplate;
 
-    public final GridFsOperations operations;
+    public GridFsOperations operations;
 
     @Autowired
     public FileServiceImpl(GridFsTemplate gridFsTemplate, GridFsOperations operations) {
@@ -36,13 +38,11 @@ public class FileServiceImpl implements FileService {
         metaData.put("name", name);
         try {
             ObjectId id = gridFsTemplate.store(multipartFile.getInputStream(),
-                    multipartFile.getName(), multipartFile.getContentType(), metaData);
+                            multipartFile.getName(), multipartFile.getContentType(), metaData);
             return id.toString();
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "access error" ,e);
         }
-        catch (IOException e){
-            /*aaaaaaa*/
-        }
-            return null;
     }
 
     @Override
@@ -51,21 +51,15 @@ public class FileServiceImpl implements FileService {
         try {
             FileEntity fileEntity = FileEntity.builder()
                     .name(file.getMetadata().get("name").toString())
-                    .stream(operations.getResource(file).getInputStream())
+                    .type(operations.getResource(file).getContentType())
+                    .file(operations.getResource(file).getInputStream().readAllBytes())
                     .build();
-        } catch (IOException | NullPointerException exception) {
-            exception.printStackTrace();
+            return fileEntity;
+        } catch (NullPointerException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "file with id " + id + "does not exist", e);
+        } catch (IOException e){
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "io error", e);
         }
-        return null;
-    }
-/*
-    @Override
-    public void deleteFile(String name) {
-
     }
 
-    @Override
-    public void deleteAllFiles() {
-
-    }*/
 }

@@ -2,10 +2,9 @@
 <html lang="en">
 <body>
 <h1>Upload new File</h1>
-<form method="POST" action="/files/add" enctype="multipart/form-data">
-    Name:<input type="text" name="name" />
-    File:<input type="file" name="file" accept="video/*" />
-    <input type="submit" value="Upload" />
-</form>
+    <form method="POST" action="/files/add" enctype="multipart/form-data">
+        File:<input type="file" name="file" accept="multipart/*" />
+        <input type="submit" value="Upload" />
+    </form>
 </body>
 </html>

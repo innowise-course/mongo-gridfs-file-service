@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
 <body>
 <h1>View File</h1>
-Name: <span th:text="${name}">name</span>
+File: <span th:text="${file.getName()}">name</span>
 <video width="400" controls>
     <source th:src="${url}" />
 </video>
