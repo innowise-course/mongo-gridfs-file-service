@@ -1,0 +1,9 @@
+spring:
+  data:
+    mongodb:
+      database: mongodb
+  servlet:
+    multipart:
+      max-file-size: 256MB
+      max-request-size: 256MB
+      enabled: true
