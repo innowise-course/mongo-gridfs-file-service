@@ -3,7 +3,6 @@ package ru.innowise.danko.mongogridfileservice.service.impl;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.client.gridfs.model.GridFSFile;
-import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -11,17 +10,20 @@ import org.springframework.data.mongodb.gridfs.GridFsOperations;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import ru.innowise.danko.mongogridfileservice.entity.FileEntity;
+import ru.innowise.danko.mongogridfileservice.dto.FileDto;
 import ru.innowise.danko.mongogridfileservice.service.FileService;
+import ru.innowise.danko.mongogridfileservice.util.exceptions.FileNotFound;
 
 import java.io.*;
+
+import static java.util.Optional.ofNullable;
 
 @Service
 public class FileServiceImpl implements FileService {
 
-    public final GridFsTemplate gridFsTemplate;
+    public GridFsTemplate gridFsTemplate;
 
-    public final GridFsOperations operations;
+    public GridFsOperations operations;
 
     @Autowired
     public FileServiceImpl(GridFsTemplate gridFsTemplate, GridFsOperations operations) {
@@ -30,42 +32,34 @@ public class FileServiceImpl implements FileService {
     }
 
     @Override
-    public String uploadFile(String name, MultipartFile multipartFile) {
+    public String uploadFile(MultipartFile multipartFile) {
         DBObject metaData = new BasicDBObject();
         metaData.put("type", "file");
-        metaData.put("name", name);
         try {
-            ObjectId id = gridFsTemplate.store(multipartFile.getInputStream(),
-                    multipartFile.getName(), multipartFile.getContentType(), metaData);
-            return id.toString();
+            return gridFsTemplate.store(multipartFile.getInputStream(),
+                    multipartFile.getName(), multipartFile.getContentType(),metaData).toString();
+        } catch (IOException e) {
+            throw new IllegalStateException("illegal state, " + e.getMessage());
         }
-        catch (IOException e){
-            /*aaaaaaa*/
-        }
-            return null;
     }
 
     @Override
-    public FileEntity downloadFile(String id) {
-        GridFSFile file = gridFsTemplate.findOne(new Query(Criteria.where("_id").is(id)));
+    public FileDto downloadFile(String id) {
+        return ofNullable(gridFsTemplate.findOne(new Query(Criteria.where("_id").is(id))))
+                .map(item -> FileDto.builder()
+                        .name(item.getFilename())
+                        .type(operations.getResource(item).getContentType())
+                        .file(extract(item))
+                        .build())
+                .orElseThrow(() -> new FileNotFound(id));
+    }
+
+    private byte[] extract(GridFSFile file) {
         try {
-            FileEntity fileEntity = FileEntity.builder()
-                    .name(file.getMetadata().get("name").toString())
-                    .stream(operations.getResource(file).getInputStream())
-                    .build();
-        } catch (IOException | NullPointerException exception) {
-            exception.printStackTrace();
+            return operations.getResource(file).getInputStream().readAllBytes();
+        } catch (IOException e) {
+            throw new IllegalStateException("illegal state, " + e.getMessage());
         }
-        return null;
-    }
-/*
-    @Override
-    public void deleteFile(String name) {
-
     }
 
-    @Override
-    public void deleteAllFiles() {
-
-    }*/
 }

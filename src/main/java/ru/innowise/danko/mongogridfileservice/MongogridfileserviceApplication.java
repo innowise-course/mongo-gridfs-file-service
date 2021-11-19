@@ -9,7 +9,6 @@ public class MongogridfileserviceApplication {
     public static void main(String[] args) {
 
         SpringApplication.run(MongogridfileserviceApplication.class, args);
-
     }
 
 }

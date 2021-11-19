@@ -1,46 +1,37 @@
 package ru.innowise.danko.mongogridfileservice.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.util.FileCopyUtils;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import ru.innowise.danko.mongogridfileservice.entity.FileEntity;
+import ru.innowise.danko.mongogridfileservice.dto.FileDto;
 import ru.innowise.danko.mongogridfileservice.service.FileService;
 
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-
-@Controller
+@RestController
+@RequestMapping("/files/")
 public class FileController {
 
-    public final FileService fileService;
+    public FileService fileService;
 
     @Autowired
     public FileController(FileService fileService) {
         this.fileService = fileService;
     }
 
-    @PostMapping("/files/add")
-    public String addFile(@RequestParam("name") String name,
-                          @RequestParam("file") MultipartFile file, Model model) throws IOException {
-        String id = fileService.uploadFile(name, file);
-        return "redirect:/files/" + id;
+    @PostMapping("/")
+    public ResponseEntity<String> uploadFile(@RequestPart("file") MultipartFile file) {
+        return ResponseEntity.ok().body(fileService.uploadFile(file));
     }
 
-    @GetMapping("/files/{id}")
-    public String getVideo(@PathVariable String id, Model model) throws Exception {
-        FileEntity file = fileService.downloadFile(id);
-        model.addAttribute("name", file.getName());
-        model.addAttribute("url", "/files/stream/" + id);
-        return "files";
-    }
-
-    @GetMapping("/files/stream/{id}")
-    public void streamVideo(@PathVariable String id, HttpServletResponse response) throws Exception {
-        FileEntity file = fileService.downloadFile(id);
-        FileCopyUtils.copy(file.getStream(), response.getOutputStream());
+    @GetMapping("/{id}")
+    public ResponseEntity<ByteArrayResource> getFile(@PathVariable String id) {
+        FileDto file = fileService.downloadFile(id);
+        return ResponseEntity.ok().contentType(MediaType.parseMediaType(file.getType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" +file.getName())
+                .body(new ByteArrayResource(file.getFile()));
     }
 
 }
